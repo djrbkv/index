@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArooBek — Trait Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Poppins:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#100e0c; --panel:#1a1714; --panel-2:#221e19; --line:#332d26;
+    --text:#f2ede4; --muted:#948a7a;
+    --ember:#d97d3d; --indigo:#5b5f92; --gold:#c9a227; --sage:#6b8f71; --rose:#b5546b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;
+  }
+
+  header{
+    padding:20px 26px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    position:relative;overflow:hidden;
+  }
+  header::before{
+    content:'';position:absolute;top:-60px;left:20px;width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle, rgba(217,125,61,.14), transparent 70%);pointer-events:none;
+  }
+  .brand{display:flex;align-items:center;gap:12px;position:relative;}
+  .brand-mark{
+    width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(155deg, var(--ember), var(--gold));
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+    box-shadow:0 0 22px rgba(217,125,61,.35);
+  }
+  .brand h1{font-family:'Fraunces',serif;font-weight:700;font-size:21px;margin:0;letter-spacing:.2px;}
+  .brand span{color:var(--muted);font-size:11.5px;font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;}
+  .hdr-actions{display:flex;gap:8px;align-items:center;}
+  select, .icon-btn{
+    background:var(--panel);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:9px 12px;font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;
+  }
+  select:hover, .icon-btn:hover{border-color:var(--ember);}
+  .icon-btn{padding:9px 11px;}
+
+  .container{max-width:1040px;margin:0 auto;padding:30px 20px 70px;}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;
+  }
+  .eyebrow .dot{width:6px;height:6px;background:var(--ember);border-radius:50%;box-shadow:0 0 6px rgba(217,125,61,.6);}
+
+  /* setup */
+  .setup-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px;margin-bottom:26px;}
+  .setup-card h2{font-family:'Fraunces',serif;font-weight:700;font-size:22px;margin:0 0 6px;}
+  .setup-card p{color:var(--muted);font-size:12.5px;margin:0 0 20px;}
+  .setup-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
+  @media(max-width:640px){.setup-grid{grid-template-columns:1fr 1fr;}}
+  .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;}
+  .field input[type=text], .field input[type=number], .field input[type=password]{
+    width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:11px 12px;font-size:14px;font-family:'Inter',sans-serif;
+  }
+  .field input:focus, .stepper input:focus, select:focus{outline:2px solid var(--ember);outline-offset:1px;}
+  .math-preview{
+    background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:13px 16px;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;margin-bottom:18px;color:var(--muted);
+  }
+  .math-preview b{color:var(--gold);}
+  button.primary{
+    background:linear-gradient(155deg, var(--ember), #b8602b);color:#181310;border:none;border-radius:11px;
+    padding:13px 24px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+    cursor:pointer;letter-spacing:.2px;
+  }
+  button.primary:disabled{opacity:.3;cursor:not-allowed;}
+  button.secondary{
+    background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:11px;
+    padding:12px 18px;font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;
+  }
+  button.secondary:disabled{opacity:.3;cursor:not-allowed;}
+  button.link{background:none;border:none;color:var(--muted);font-size:11.5px;cursor:pointer;text-decoration:underline;}
+
+  /* workspace */
+  #workspace{display:none;}
+  .set-bar{
+    display:flex;justify-content:space-between;align-items:center;background:var(--panel);
+    border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin-bottom:22px;flex-wrap:wrap;gap:10px;
+  }
+  .set-bar h2{font-family:'Fraunces',serif;font-size:17px;margin:0;font-weight:600;}
+  .set-bar .meta{font-size:11.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  .combo-total{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold);}
+
+  /* stack indicator */
+  .stack-indicator{display:flex;flex-direction:column;gap:3px;margin-bottom:22px;}
+  .stack-indicator .row{display:flex;align-items:center;gap:10px;}
+  .stack-indicator .bar{height:5px;border-radius:3px;flex:1;opacity:.85;}
+  .stack-indicator .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);width:110px;text-align:right;}
+
+  .layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:24px;}
+  .layer{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:19px;}
+  .layer-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+  .layer h3{font-family:'Fraunces',serif;font-size:15px;margin:0;font-weight:600;}
+  .layer .need{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+  .layer .hint{font-size:11.5px;color:var(--muted);margin:2px 0 12px;line-height:1.5;}
+
+  .rarity-total{
+    font-size:11px;font-family:'IBM Plex Mono',monospace;margin:0 0 12px;padding:7px 10px;
+    border:1px solid var(--line);border-radius:8px;background:var(--bg);
+  }
+  .rarity-total.ok{border-color:var(--sage);color:var(--sage);}
+  .rarity-total.bad{border-color:var(--rose);color:var(--rose);}
+
+  .dropzone{
+    border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center;cursor:pointer;
+    background:var(--bg);margin-bottom:13px;transition:.15s;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--ember);background:var(--panel-2);}
+  .dropzone span{font-size:12px;color:var(--muted);}
+  .dropzone input{display:none;}
+
+  .slot-list{display:flex;flex-direction:column;gap:9px;max-height:340px;overflow-y:auto;padding-right:2px;}
+  .slot{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:10px;}
+  .slot-top{display:grid;grid-template-columns:36px 1fr auto;gap:9px;align-items:center;}
+  .slot img{width:36px;height:36px;object-fit:cover;border-radius:7px;background:repeating-conic-gradient(#2a251f 0% 25%, #211d18 0% 50%) 50%/8px 8px;border:1px solid var(--line);}
+  .slot .name{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
+  .slot .del{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:2px 6px;}
+  .slot .del:hover{color:var(--rose);}
+
+  .rarity-row{display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);}
+  .stepper button{
+    background:var(--panel-2);color:var(--text);border:none;width:24px;height:26px;font-size:14px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .stepper button:hover{background:var(--ember);color:#181310;}
+  .stepper input{
+    width:50px;text-align:center;border:none;background:var(--panel);font-family:'IBM Plex Mono',monospace;
+    font-size:12px;padding:5px 2px;color:var(--gold);
+  }
+  .stepper .pct{font-size:10px;color:var(--muted);}
+  .tier-chip{
+    font-size:9.5px;font-family:'IBM Plex Mono',monospace;padding:4px 9px;border-radius:20px;font-weight:600;
+    letter-spacing:.4px;white-space:nowrap;margin-left:auto;
+  }
+  .warn{font-size:10.5px;margin-top:8px;padding:6px 9px;border-radius:7px;font-family:'IBM Plex Mono',monospace;}
+  .warn.err{background:rgba(181,84,107,.14);color:var(--rose);}
+  .warn.ok{background:rgba(107,143,113,.14);color:var(--sage);}
+  .empty-note{font-size:11.5px;color:var(--muted);font-style:italic;}
+
+  /* preview */
+  .preview-section{display:grid;grid-template-columns:320px 1fr;gap:16px;}
+  @media(max-width:720px){.preview-section{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;}
+  .card-canvas-wrap{position:relative;aspect-ratio:1/1;background:#000;}
+  canvas{width:100%;height:100%;display:block;}
+  .card-title{padding:14px 16px 8px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);}
+  .stat-list{padding:8px 16px 16px;display:flex;flex-direction:column;gap:8px;font-size:12px;font-family:'IBM Plex Mono',monospace;}
+  .stat-row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding-bottom:7px;}
+  .stat-row .k{color:var(--muted);}
+  .actions{padding:0 16px 16px;}
+
+  .info-panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;}
+  .info-panel h3{font-family:'Fraunces',serif;font-size:16px;margin:0 0 12px;font-weight:600;}
+  .info-panel ul{margin:0 0 16px;padding-left:18px;color:var(--muted);font-size:12.5px;line-height:1.9;}
+  .progress-wrap{margin-top:14px;background:var(--bg);border-radius:10px;height:8px;overflow:hidden;border:1px solid var(--line);}
+  .progress-bar{height:100%;background:linear-gradient(90deg,var(--ember),var(--gold));width:0%;transition:.2s;}
+  .progress-text{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:8px;}
+
+  /* modal + lock */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(6,5,4,.72);z-index:60;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;max-width:380px;width:100%;}
+  .modal h3{font-family:'Fraunces',serif;font-size:18px;margin:0 0 16px;font-weight:600;}
+  .modal .row{display:flex;justify-content:space-between;font-size:12.5px;padding:9px 0;border-bottom:1px dashed var(--line);font-family:'IBM Plex Mono',monospace;}
+  .modal .row .k{color:var(--muted);}
+  .modal-close{margin-top:16px;width:100%;}
+  .modal p.note{font-size:11px;color:var(--muted);line-height:1.6;}
+
+  #lockScreen{
+    position:fixed;inset:0;background:var(--bg);color:var(--text);z-index:100;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .lock-box{max-width:340px;width:100%;text-align:center;}
+  .lock-box .brand-mark{margin:0 auto 18px;width:56px;height:56px;font-size:26px;}
+  .lock-box h1{font-family:'Fraunces',serif;font-size:28px;margin:0 0 8px;font-weight:700;}
+  .lock-box p{color:var(--muted);font-size:12px;margin:0 0 22px;line-height:1.6;}
+  .lock-box input{
+    width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:13px;font-size:16px;text-align:center;letter-spacing:5px;margin-bottom:12px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .lock-box button{width:100%;}
+  .lock-err{color:var(--rose);font-size:11.5px;margin-top:10px;min-height:16px;}
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="brand-mark">🐺</div>
+    <h1>ArooBek</h1>
+    <p id="lockSubtitle">Set a passcode for this studio. It only locks this page on this device — it isn't encrypted account security.</p>
+    <input type="password" id="lockInput" inputmode="numeric" placeholder="••••" maxlength="12">
+    <button class="primary" id="lockBtn" style="width:100%;">Set passcode</button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">🐺</div>
+    <div><h1>ArooBek</h1><span>trait studio</span></div>
+  </div>
+  <div class="hdr-actions">
+    <select id="collectionSelect"><option value="">— new set —</option></select>
+    <button class="icon-btn" id="infoBtn" title="Set info">ⓘ</button>
+    <button class="icon-btn" id="lockChangeBtn" title="Change passcode">🔒</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="setup-card" id="setupCard">
+    <span class="eyebrow"><span class="dot"></span>New set</span>
+    <h2>Start a new sticker set</h2>
+    <p>Tell the studio how many of each layer you're planning — it works out the math for you.</p>
+    <div class="setup-grid">
+      <div class="field"><label>Set name</label><input type="text" id="collName" placeholder="Aroo — Uzbek Tradition"></div>
+      <div class="field"><label>Backdrops</label><input type="number" id="cBackdrop" min="1" max="50" value="10"></div>
+      <div class="field"><label>Models</label><input type="number" id="cModel" min="1" max="50" value="5"></div>
+      <div class="field"><label>Symbols</label><input type="number" id="cSymbol" min="1" max="50" value="4"></div>
+    </div>
+    <div class="math-preview" id="mathPreview">10 × 5 × 4 = <b>200</b> unique stickers</div>
+    <button class="primary" id="createBtn">Open set</button>
+  </div>
+
+  <div id="workspace">
+    <div class="set-bar">
+      <div>
+        <h2 id="wsName">—</h2>
+        <span class="meta" id="wsMeta">—</span>
+      </div>
+      <div class="combo-total" id="wsCombo">0 combinations</div>
+    </div>
+
+    <div class="stack-indicator">
+      <div class="row"><span class="lbl">Model (top)</span><span class="bar" style="background:var(--ember);"></span></div>
+      <div class="row"><span class="lbl">Symbol (tiled)</span><span class="bar" style="background:var(--indigo);"></span></div>
+      <div class="row"><span class="lbl">Backdrop (bottom)</span><span class="bar" style="background:var(--gold);"></span></div>
+    </div>
+
+    <div class="layers" id="layers"></div>
+
+    <div class="preview-section">
+      <div class="card">
+        <div class="card-canvas-wrap"><canvas id="cardCanvas" width="512" height="512"></canvas></div>
+        <div class="card-title" id="pv-num">#000,000</div>
+        <div class="stat-list">
+          <div class="stat-row"><span class="k">Model</span><span id="s-model">—</span></div>
+          <div class="stat-row"><span class="k">Symbol</span><span id="s-symbol">—</span></div>
+          <div class="stat-row"><span class="k">Backdrop</span><span id="s-backdrop">—</span></div>
+          <div class="stat-row"><span class="k">Tier</span><span id="s-tier">—</span></div>
+        </div>
+        <div class="actions"><button class="secondary" id="rollBtn" disabled style="width:100%;">Preview one</button></div>
+      </div>
+
+      <div class="info-panel">
+        <span class="eyebrow"><span class="dot"></span>Batch export</span>
+        <h3>Generate the full set</h3>
+        <ul>
+          <li>Preview one first — check position, tiling and shine</li>
+          <li>Once it looks right, generate the full batch</li>
+          <li>Every combination is made exactly once, no duplicates</li>
+          <li>Download comes as one ZIP — all PNGs plus a metadata list</li>
+        </ul>
+        <button class="primary" id="genAllBtn" style="width:100%;" disabled>Generate all → ZIP</button>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-text" id="progressText"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="infoModal">
+  <div class="modal">
+    <h3 id="modalTitle">Set info</h3>
+    <div class="row"><span class="k">Opened</span><span id="m-created">—</span></div>
+    <div class="row"><span class="k">Backdrops</span><span id="m-backdrop">—</span></div>
+    <div class="row"><span class="k">Models</span><span id="m-model">—</span></div>
+    <div class="row"><span class="k">Symbols</span><span id="m-symbol">—</span></div>
+    <div class="row"><span class="k">Total combinations</span><span id="m-total">—</span></div>
+    <div class="row"><span class="k">Status</span><span id="m-status">—</span></div>
+    <button class="secondary modal-close" id="closeModal">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="lockChangeModal">
+  <div class="modal">
+    <h3>Change passcode</h3>
+    <p class="note">Resets the code used to unlock this page on this device.</p>
+    <div class="field" style="margin:16px 0;"><label>New passcode</label><input type="password" id="newLockInput" inputmode="numeric" maxlength="12"></div>
+    <button class="primary" id="saveLockBtn" style="width:100%;">Save</button>
+    <button class="secondary modal-close" id="closeLockModal" style="width:100%;margin-top:8px;">Cancel</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ================= LOCK SCREEN =================
+async function getPasscode(){
+  try{ const r = await window.storage.get('studio-passcode', false); return r ? r.value : null; }catch(e){ return null; }
+}
+async function setPasscode(v){ try{ await window.storage.set('studio-passcode', v, false); }catch(e){} }
+
+(async function initLock(){
+  const existing = await getPasscode();
+  const lockScreen = document.getElementById('lockScreen');
+  const subtitle = document.getElementById('lockSubtitle');
+  const btn = document.getElementById('lockBtn');
+  const input = document.getElementById('lockInput');
+  const err = document.getElementById('lockErr');
+
+  if(existing){
+    subtitle.textContent = 'Enter your passcode to open the studio.';
+    btn.textContent = 'Unlock';
+  }
+
+  btn.addEventListener('click', async ()=>{
+    const val = input.value.trim();
+    if(!val){ err.textContent = 'Enter a passcode.'; return; }
+    if(existing){
+      if(val === existing){ lockScreen.style.display = 'none'; }
+      else { err.textContent = 'Incorrect passcode.'; input.value=''; }
+    } else {
+      await setPasscode(val);
+      lockScreen.style.display = 'none';
+    }
+  });
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') btn.click(); });
+})();
+
+document.getElementById('lockChangeBtn').addEventListener('click', ()=> document.getElementById('lockChangeModal').classList.add('show'));
+document.getElementById('closeLockModal').addEventListener('click', ()=> document.getElementById('lockChangeModal').classList.remove('show'));
+document.getElementById('saveLockBtn').addEventListener('click', async ()=>{
+  const val = document.getElementById('newLockInput').value.trim();
+  if(!val) return;
+  await setPasscode(val);
+  document.getElementById('lockChangeModal').classList.remove('show');
+});
+
+// ================= STATE =================
+let activeCollection = null; // {id,name,createdAt,counts,assetIds:{backdrop:[],model:[],symbol:[]}}
+let assets = { backdrop: [], model: [], symbol: [] };
+const layerOrder = ['backdrop','symbol','model'];
+
+const canvas = document.getElementById('cardCanvas');
+const ctx = canvas.getContext('2d');
+
+const tierColors = { common:'#948a7a', uncommon:'#6b8f71', rare:'#5b8fc0', epic:'#9a6fc0', mythic:'#c9a227' };
+function tierFor(pct){
+  if(pct >= 15) return 'common';
+  if(pct >= 7) return 'uncommon';
+  if(pct >= 3) return 'rare';
+  if(pct >= 1) return 'epic';
+  return 'mythic';
+}
+
+// ================= STORAGE =================
+async function loadCollectionsIndex(){
+  try{ const r = await window.storage.get('collections-index', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; }
+}
+async function saveCollectionsIndex(list){ try{ await window.storage.set('collections-index', JSON.stringify(list), false); }catch(e){} }
+async function saveCollection(coll){ try{ await window.storage.set('collection:'+coll.id, JSON.stringify(coll), false); }catch(e){} }
+async function loadCollection(id){
+  try{ const r = await window.storage.get('collection:'+id, false); return r ? JSON.parse(r.value) : null; }catch(e){ return null; }
+}
+async function saveAsset(id, data){ try{ await window.storage.set('asset:'+id, JSON.stringify(data), false); }catch(e){} }
+async function loadAsset(id){
+  try{ const r = await window.storage.get('asset:'+id, false); return r ? JSON.parse(r.value) : null; }catch(e){ return null; }
+}
+async function deleteAsset(id){ try{ await window.storage.delete('asset:'+id, false); }catch(e){} }
+
+async function refreshSelect(){
+  const list = await loadCollectionsIndex();
+  const sel = document.getElementById('collectionSelect');
+  sel.innerHTML = '<option value="">— new set —</option>' + list.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+document.getElementById('collectionSelect').addEventListener('change', async e=>{
+  const id = e.target.value;
+  if(!id){ document.getElementById('setupCard').style.display='block'; document.getElementById('workspace').style.display='none'; return; }
+  const coll = await loadCollection(id);
+  if(coll) await openWorkspace(coll);
+});
+
+// ================= SETUP =================
+function updateMathPreview(){
+  const b = parseInt(document.getElementById('cBackdrop').value)||0;
+  const m = parseInt(document.getElementById('cModel').value)||0;
+  const s = parseInt(document.getElementById('cSymbol').value)||0;
+  document.getElementById('mathPreview').innerHTML = `${b} × ${m} × ${s} = <b>${(b*m*s).toLocaleString()}</b> unique stickers`;
+}
+['cBackdrop','cModel','cSymbol'].forEach(id=>document.getElementById(id).addEventListener('input', updateMathPreview));
+updateMathPreview();
+
+document.getElementById('createBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('collName').value.trim() || 'Untitled set';
+  const counts = {
+    backdrop: Math.max(1, parseInt(document.getElementById('cBackdrop').value)||1),
+    model: Math.max(1, parseInt(document.getElementById('cModel').value)||1),
+    symbol: Math.max(1, parseInt(document.getElementById('cSymbol').value)||1),
+  };
+  const coll = { id:'c'+Date.now(), name, createdAt:new Date().toISOString(), counts, assetIds:{backdrop:[],model:[],symbol:[]} };
+  const list = await loadCollectionsIndex();
+  list.push({ id: coll.id, name: coll.name, createdAt: coll.createdAt });
+  await saveCollectionsIndex(list);
+  await saveCollection(coll);
+  await refreshSelect();
+  document.getElementById('collectionSelect').value = coll.id;
+  await openWorkspace(coll);
+});
+
+// ================= WORKSPACE =================
+async function openWorkspace(coll){
+  activeCollection = coll;
+  if(!activeCollection.assetIds) activeCollection.assetIds = {backdrop:[],model:[],symbol:[]};
+  assets = { backdrop: [], model: [], symbol: [] };
+  document.getElementById('setupCard').style.display='none';
+  document.getElementById('workspace').style.display='block';
+  document.getElementById('wsName').textContent = coll.name;
+  document.getElementById('wsMeta').textContent = `opened ${new Date(coll.createdAt).toLocaleDateString()}`;
+  buildLayers();
+
+  for(const type of layerOrder){
+    for(const id of activeCollection.assetIds[type]){
+      const data = await loadAsset(id);
+      if(!data) continue;
+      const img = new Image();
+      await new Promise(res=>{ img.onload = res; img.onerror = res; img.src = data.dataURL; });
+      if(!img.width) continue;
+      const warnings = checkImage(type, img, (data.dataURL.length*0.75)/1024);
+      assets[type].push({ id, name:data.name, src:data.dataURL, img, rarity:data.rarity, warnings });
+    }
+    renderList(type);
+  }
+  updateComboBar();
+}
+
+function buildLayers(){
+  const wrap = document.getElementById('layers');
+  wrap.innerHTML = '';
+  layerOrder.forEach(type=>{
+    const need = activeCollection.counts[type];
+    const specHint = type==='backdrop'
+      ? 'Full 512×512 background art. Bottom layer.'
+      : type==='model'
+      ? 'Transparent PNG. Centered art, top layer.'
+      : 'Small transparent icon. Tiled at 20% opacity.';
+    const section = document.createElement('div');
+    section.className = 'layer';
+    section.dataset.type = type;
+    section.innerHTML = `
+      <div class="layer-head"><h3>${type.charAt(0).toUpperCase()+type.slice(1)}</h3><span class="need" data-need>0/${need}</span></div>
+      <p class="hint">${specHint}</p>
+      <div class="rarity-total" data-total>0% assigned</div>
+      <label class="dropzone">
+        <span>Click or drop images</span>
+        <input type="file" accept="image/*" multiple>
+      </label>
+      <div class="slot-list" data-list></div>
+    `;
+    wrap.appendChild(section);
+
+    const input = section.querySelector('input[type=file]');
+    const dz = section.querySelector('.dropzone');
+    input.addEventListener('change', e=>{ handleFiles(type, e.target.files); e.target.value=''; });
+    dz.addEventListener('dragover', e=>{e.preventDefault(); dz.classList.add('drag');});
+    dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+    dz.addEventListener('drop', e=>{
+      e.preventDefault(); dz.classList.remove('drag');
+      handleFiles(type, e.dataTransfer.files);
+    });
+  });
+}
+
+function checkImage(type, img, fileSizeKB){
+  const warnings = [];
+  if(type === 'backdrop'){
+    if(img.width !== 512 || img.height !== 512) warnings.push({ok:false, text:`Expected 512×512, this is ${img.width}×${img.height}`});
+    else warnings.push({ok:true, text:'512×512 — correct'});
+  } else {
+    if(img.width !== img.height) warnings.push({ok:false, text:`Not square (${img.width}×${img.height})`});
+    if(img.width > 512 || img.height > 512) warnings.push({ok:false, text:'Larger than 512px, will be scaled down'});
+  }
+  try{
+    const off = document.createElement('canvas');
+    off.width = img.width; off.height = img.height;
+    const octx = off.getContext('2d');
+    octx.drawImage(img,0,0);
+    const data = octx.getImageData(0,0,img.width,img.height).data;
+    let hasTransparent = false;
+    for(let i=3;i<data.length;i+=4*37){ if(data[i] < 250){ hasTransparent = true; break; } }
+    if(type !== 'backdrop'){
+      warnings.push(hasTransparent ? {ok:true, text:'Transparent background detected'} : {ok:false, text:'No transparency detected'});
+    }
+  }catch(e){ /* canvas may be tainted for cross-origin images; skip transparency check silently */ }
+  if(fileSizeKB > 512) warnings.push({ok:false, text:`~${Math.round(fileSizeKB)}KB — Telegram limit is 512KB`});
+  return warnings;
+}
+
+async function handleFiles(type, files){
+  const need = activeCollection.counts[type];
+  for(const file of [...files]){
+    if(!file.type.startsWith('image/')) continue;
+    if(assets[type].length >= need) break;
+    const dataURL = await new Promise((res,rej)=>{
+      const reader = new FileReader();
+      reader.onload = e=> res(e.target.result);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    }).catch(()=>null);
+    if(!dataURL) continue;
+    const img = new Image();
+    const loaded = await new Promise(res=>{ img.onload = ()=>res(true); img.onerror = ()=>res(false); img.src = dataURL; });
+    if(!loaded) continue;
+    const warnings = checkImage(type, img, file.size/1024);
+    const id = 'a'+Date.now()+Math.random().toString(36).slice(2,7);
+    const name = file.name.replace(/\.[^.]+$/,'') || 'untitled';
+    const rarity = 10;
+    assets[type].push({ id, name, src:dataURL, img, rarity, warnings });
+    await saveAsset(id, { type, name, dataURL, rarity });
+    activeCollection.assetIds[type].push(id);
+    await saveCollection(activeCollection);
+    renderList(type);
+  }
+  updateComboBar();
+}
+
+function renderList(type){
+  const section = document.querySelector(`.layer[data-type="${type}"]`);
+  if(!section) return;
+  section.querySelector('[data-need]').textContent = `${assets[type].length}/${activeCollection.counts[type]}`;
+  const list = section.querySelector('[data-list]');
+  list.innerHTML = '';
+  if(assets[type].length === 0){ list.innerHTML = '<div class="empty-note">Nothing uploaded yet</div>'; }
+  assets[type].forEach((a)=>{
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.dataset.id = a.id;
+    const tier = tierFor(a.rarity);
+    slot.innerHTML = `
+      <div class="slot-top">
+        <img src="${a.src}" alt="">
+        <div class="name">${escapeHtml(a.name)}</div>
+        <button class="del" data-del type="button">✕</button>
+      </div>
+      <div class="rarity-row">
+        <div class="stepper">
+          <button data-dec type="button">−</button>
+          <input type="number" data-pct value="${a.rarity}" min="0.01" max="100" step="0.5">
+          <button data-inc type="button">+</button>
+        </div>
+        <span class="pct">%</span>
+        <span class="tier-chip" data-chip style="background:${tierColors[tier]}22;color:${tierColors[tier]};">${tier}</span>
+      </div>
+      ${a.warnings.map(w=>`<div class="warn ${w.ok?'ok':'err'}">${w.ok?'✓':'⚠'} ${escapeHtml(w.text)}</div>`).join('')}
+    `;
+    list.appendChild(slot);
+
+    const pctInput = slot.querySelector('[data-pct]');
+    const chip = slot.querySelector('[data-chip]');
+
+    function applyRarity(newVal, persist){
+      if(isNaN(newVal)) newVal = 0.01;
+      newVal = Math.min(100, Math.max(0.01, Math.round(newVal*100)/100));
+      a.rarity = newVal;
+      pctInput.value = newVal;
+      const t = tierFor(newVal);
+      chip.textContent = t;
+      chip.style.background = tierColors[t]+'22';
+      chip.style.color = tierColors[t];
+      updateTotalDisplay(type);
+      if(persist) saveAsset(a.id, { type, name:a.name, dataURL:a.src, rarity:a.rarity });
+    }
+
+    pctInput.addEventListener('input', ()=> applyRarity(parseFloat(pctInput.value), false));
+    pctInput.addEventListener('change', ()=> applyRarity(parseFloat(pctInput.value), true));
+    slot.querySelector('[data-inc]').addEventListener('click', ()=> applyRarity(a.rarity+1, true));
+    slot.querySelector('[data-dec]').addEventListener('click', ()=> applyRarity(a.rarity-1, true));
+
+    slot.querySelector('[data-del]').addEventListener('click', async ()=>{
+      const i = assets[type].findIndex(x=>x.id===a.id);
+      if(i>-1) assets[type].splice(i,1);
+      await deleteAsset(a.id);
+      activeCollection.assetIds[type] = activeCollection.assetIds[type].filter(x=>x!==a.id);
+      await saveCollection(activeCollection);
+      renderList(type);
+      updateComboBar();
+    });
+  });
+  updateTotalDisplay(type);
+}
+
+function updateTotalDisplay(type){
+  const section = document.querySelector(`.layer[data-type="${type}"]`);
+  if(!section) return;
+  const totalEl = section.querySelector('[data-total]');
+  const totalPct = assets[type].reduce((a,x)=>a+x.rarity,0);
+  totalEl.textContent = `${totalPct.toFixed(1)}% assigned`;
+  totalEl.className = 'rarity-total ' + (Math.abs(totalPct-100)<0.5 ? 'ok' : (assets[type].length? 'bad':''));
+  updateComboBar();
+}
+
+function updateComboBar(){
+  const b = assets.backdrop.length, m = assets.model.length, s = assets.symbol.length;
+  const total = b*m*s;
+  document.getElementById('wsCombo').textContent = `${total.toLocaleString()} combinations ready`;
+  const nb = activeCollection.counts.backdrop, nm = activeCollection.counts.model, ns = activeCollection.counts.symbol;
+  const fullyLoaded = b===nb && m===nm && s===ns && nb>0 && nm>0 && ns>0;
+  document.getElementById('rollBtn').disabled = !(b>0 && m>0 && s>0);
+  document.getElementById('genAllBtn').disabled = !fullyLoaded;
+}
+
+// ================= DRAWING =================
+function weightedPick(arr){
+  const totalWeight = arr.reduce((a,x)=>a+x.rarity,0);
+  if(totalWeight <= 0) return arr[Math.floor(Math.random()*arr.length)];
+  let r = Math.random()*totalWeight;
+  for(const item of arr){ r -= item.rarity; if(r<=0) return item; }
+  return arr[arr.length-1];
+}
+
+// Fixed 18-point symbol layout, measured proportionally from a real Telegram gift reference.
+// Each point also stores its distance from canvas center (256,256), used to scale size/opacity.
+const SYMBOL_POINTS = [
+  {x:196,y:65},{x:320,y:68},{x:99,y:67},{x:412,y:66},{x:148,y:150},{x:362,y:147},
+  {x:433,y:206},{x:94,y:207},{x:150,y:267},{x:365,y:300},{x:112,y:381},{x:415,y:384},
+  {x:163,y:438},{x:349,y:438},{x:258,y:469},{x:424,y:501},{x:258,y:-10},{x:93,y:487}
+].map(p => ({...p, dist: Math.hypot(p.x-256, p.y-256)}));
+const SYMBOL_DMIN = Math.min(...SYMBOL_POINTS.map(p=>p.dist));
+const SYMBOL_DMAX = Math.max(...SYMBOL_POINTS.map(p=>p.dist));
+
+function drawCard(targetCtx, backdrop, model, symbol){
+  targetCtx.clearRect(0,0,512,512);
+
+  // 1. backdrop, cover-fit
+  const bAspect = backdrop.img.width/backdrop.img.height;
+  let bw=512,bh=512,bx=0,by=0;
+  if(bAspect>1){ bh=512; bw=512*bAspect; bx=-(bw-512)/2; } else { bw=512; bh=512/bAspect; by=-(bh-512)/2; }
+  targetCtx.drawImage(backdrop.img, bx, by, bw, bh);
+
+  // 2. 18 fixed symbol instances — bigger & more visible near center, smaller & fainter near the edge
+  const SIZE_MAX=42, SIZE_MIN=14, OP_MAX=0.20, OP_MIN=0.07;
+  for(const p of SYMBOL_POINTS){
+    const t = SYMBOL_DMAX>SYMBOL_DMIN ? (p.dist-SYMBOL_DMIN)/(SYMBOL_DMAX-SYMBOL_DMIN) : 0;
+    const size = SIZE_MAX - t*(SIZE_MAX-SIZE_MIN);
+    const op = OP_MAX - t*(OP_MAX-OP_MIN);
+    targetCtx.save();
+    targetCtx.globalAlpha = op;
+    targetCtx.drawImage(symbol.img, p.x-size/2, p.y-size/2, size, size);
+    targetCtx.restore();
+  }
+
+  // 3. radial light behind the model — two-stage falloff: 23% at center -> 8% mid -> 0% at edge
+  const cx=256, cy=256, radius=240, inner=radius*0.5;
+  const grad = targetCtx.createRadialGradient(cx,cy,0,cx,cy,radius);
+  grad.addColorStop(0, 'rgba(255,255,255,0.23)');
+  grad.addColorStop(inner/radius, 'rgba(255,255,255,0.08)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  targetCtx.save();
+  targetCtx.fillStyle = grad;
+  targetCtx.fillRect(0,0,512,512);
+  targetCtx.restore();
+
+  // 4. model, larger and positioned slightly higher
+  const maxDim = 380;
+  const mAspect = model.img.width/model.img.height;
+  let mw,mh;
+  if(mAspect>1){ mw=maxDim; mh=maxDim/mAspect; } else { mh=maxDim; mw=maxDim*mAspect; }
+  targetCtx.drawImage(model.img, (512-mw)/2, (512-mh)/2 - 10, mw, mh);
+
+  // 5. tier ribbon — diagonal, semi-transparent black, lowercase Poppins SemiBold, crosses the top-left corner
+  const tier = tierFor(Math.min(backdrop.rarity, model.rarity, symbol.rarity));
+  targetCtx.save();
+  targetCtx.translate(40, 40);
+  targetCtx.rotate(-Math.PI/4);
+  targetCtx.fillStyle = 'rgba(10,9,8,0.60)';
+  targetCtx.fillRect(-150, -17, 300, 34);
+  targetCtx.fillStyle = 'rgba(240,235,220,1)';
+  targetCtx.font = '600 17px "Poppins", sans-serif';
+  targetCtx.textAlign = 'center';
+  targetCtx.textBaseline = 'middle';
+  targetCtx.fillText(tier, 0, 1);
+  targetCtx.restore();
+
+  return tier;
+}
+
+
+document.getElementById('rollBtn').addEventListener('click', ()=>{
+  if(!assets.backdrop.length || !assets.model.length || !assets.symbol.length) return;
+  const backdrop = weightedPick(assets.backdrop);
+  const model = weightedPick(assets.model);
+  const symbol = weightedPick(assets.symbol);
+  const tier = drawCard(ctx, backdrop, model, symbol);
+  const num = Math.floor(Math.random()*900000+100000).toLocaleString();
+  document.getElementById('pv-num').textContent = '#'+num;
+  document.getElementById('s-model').textContent = model.name;
+  document.getElementById('s-symbol').textContent = symbol.name;
+  document.getElementById('s-backdrop').textContent = backdrop.name;
+  const tEl = document.getElementById('s-tier');
+  tEl.textContent = tier;
+  tEl.style.color = tierColors[tier];
+});
+
+// ================= GENERATE ALL =================
+document.getElementById('genAllBtn').addEventListener('click', async ()=>{
+  if(typeof JSZip === 'undefined'){
+    document.getElementById('progressText').textContent = 'Could not load the ZIP library — check your connection and try again.';
+    return;
+  }
+  const zip = new JSZip();
+  const meta = ['index,backdrop,model,symbol,tier'];
+  const off = document.createElement('canvas');
+  off.width = 512; off.height = 512;
+  const octx = off.getContext('2d');
+
+  const combos = [];
+  assets.backdrop.forEach(b=> assets.model.forEach(m=> assets.symbol.forEach(s=> combos.push([b,m,s]))));
+
+  const bar = document.getElementById('progressBar');
+  const text = document.getElementById('progressText');
+  const genBtn = document.getElementById('genAllBtn');
+  genBtn.disabled = true;
+
+  try{
+    for(let i=0;i<combos.length;i++){
+      const [b,m,s] = combos[i];
+      const tier = drawCard(octx, b, m, s);
+      const dataUrl = off.toDataURL('image/png');
+      const base64 = dataUrl.split(',')[1];
+      const filename = `aroo-${String(i+1).padStart(4,'0')}.png`;
+      zip.file(filename, base64, {base64:true});
+      meta.push(`${i+1},${b.name},${m.name},${s.name},${tier}`);
+
+      if(i % 10 === 0 || i === combos.length-1){
+        const pct = Math.round(((i+1)/combos.length)*100);
+        bar.style.width = pct+'%';
+        text.textContent = `Rendering ${i+1} / ${combos.length}`;
+        await new Promise(r=>setTimeout(r,0));
+      }
+    }
+
+    zip.file('metadata.csv', meta.join('\n'));
+    text.textContent = 'Packaging ZIP...';
+    const blob = await zip.generateAsync({type:'blob'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${(activeCollection.name||'aroo-set').replace(/\s+/g,'-')}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    text.textContent = `Done — ${combos.length} stickers exported`;
+  }catch(err){
+    text.textContent = 'Something went wrong while generating — nothing was lost, try again.';
+  }finally{
+    genBtn.disabled = false;
+    updateComboBar();
+  }
+});
+
+// ================= INFO MODAL =================
+document.getElementById('infoBtn').addEventListener('click', ()=>{
+  if(!activeCollection) return;
+  document.getElementById('modalTitle').textContent = activeCollection.name;
+  document.getElementById('m-created').textContent = new Date(activeCollection.createdAt).toLocaleString();
+  document.getElementById('m-backdrop').textContent = `${assets.backdrop.length}/${activeCollection.counts.backdrop} loaded`;
+  document.getElementById('m-model').textContent = `${assets.model.length}/${activeCollection.counts.model} loaded`;
+  document.getElementById('m-symbol').textContent = `${assets.symbol.length}/${activeCollection.counts.symbol} loaded`;
+  document.getElementById('m-total').textContent = (activeCollection.counts.backdrop*activeCollection.counts.model*activeCollection.counts.symbol).toLocaleString();
+  const ready = assets.backdrop.length===activeCollection.counts.backdrop && assets.model.length===activeCollection.counts.model && assets.symbol.length===activeCollection.counts.symbol;
+  document.getElementById('m-status').textContent = ready ? 'Ready to generate' : 'In progress';
+  document.getElementById('infoModal').classList.add('show');
+});
+document.getElementById('closeModal').addEventListener('click', ()=> document.getElementById('infoModal').classList.remove('show'));
+
+// ================= INIT =================
+refreshSelect();
+</script>
+</body>
+</html>
